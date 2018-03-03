@@ -1,0 +1,12 @@
+
+\.idea/
+
+*.zip
+
+NewMaps/
+out/
+TileMapsNewFoldered
+
+*.class
+
+*.iml
