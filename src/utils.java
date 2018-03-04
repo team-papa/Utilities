@@ -32,21 +32,53 @@ public class utils {
 //        }
 
 //        genBlankTile("TileMapsNewFoldered", 256, Color.WHITE);
-        try {
-            BufferedImage A =loadImageFromFile("TileMap2/1/0/0.png");
-            BufferedImage B =loadImageFromFile("TileMap2/1/1/0.png");
-            BufferedImage C =loadImageFromFile("TileMap2/1/0/1.png");
-            BufferedImage D =loadImageFromFile("TileMap2/1/1/1.png");
 
-            BufferedImage result = combineImageImage(A,B,C,D);
-            ImageIO.write(result, "png", new File("combined.png"));
+        tileImage("Map1_7.png", "TileMap1\\7\\%d\\%d.png", 7, 256);
+
+        try {
+            String format = "TileMap%d\\%d\\%d\\%d.png";
+            for(int zoom = 6; zoom >= 0; zoom --) {
+                for (int f = 1; f <= 1; f++) {
+                    for (int x = 0; x < Math.pow(2, zoom); x++) {
+                        for (int y = 0; y < Math.pow(2, zoom); y++) {
+                            int ax = x * 2, ay = y * 2;
+                            int bx = x * 2 + 1, by = y * 2;
+                            int cx = x * 2, cy = y * 2 + 1;
+                            int dx = x * 2 + 1, dy = y * 2 + 1;
+
+                            BufferedImage A = loadImageFromFile(blankOrFile(format, f, zoom + 1, ax, ay));
+                            BufferedImage B = loadImageFromFile(blankOrFile(format, f, zoom + 1, bx, by));
+                            BufferedImage C = loadImageFromFile(blankOrFile(format, f, zoom + 1, cx, cy));
+                            BufferedImage D = loadImageFromFile(blankOrFile(format, f, zoom + 1, dx, dy));
+
+                            BufferedImage result = combineImageImage(A, B, C, D);
+
+                            File resultFile = new File(String.format(format, f, zoom, x, y));
+                            resultFile.getParentFile().mkdirs();
+
+                            if (!allWhite(result))
+                                ImageIO.write(result, "png", new File(String.format(format, f, zoom, x, y)));
+                            System.out.print(String.format("\rz=%d/%d, f=%d/%d, x=%d/%d, y=%d/%d", 7-zoom, 7, f, 3, x, (int)Math.pow(2, zoom), y, (int)Math.pow(2, zoom)));
+                        }
+                    }
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.print("\n");
+
     }
 
-    private static BufferedImage loadImageFromFile(String path) throws IOException {
-        return ImageIO.read(new File(path));
+    private static File blankOrFile(String format, int f, int zoom, int x, int y){
+        File res = new File(String.format(format, f, zoom, x, y));
+        if(!res.exists())
+            res = new File("blank.png");
+        return res;
+    }
+
+    private static BufferedImage loadImageFromFile(File file) throws IOException {
+        return ImageIO.read(file);
     }
 
     /**
@@ -66,38 +98,75 @@ public class utils {
         StringBuilder res = new StringBuilder();
         for (int f = minFloor; f <= maxFloorInc; f++) {
             for (int z = 0; z <= maxZoomInc; z++) {
-                try {
+//                try {
                     //load in each row of tiles into memory before splitting to increase efficiency of memory access
-                    File file = new File(String.format(srcPath + "\\" + baseSrcString, f, z));
-                    ImageReader imageReader = ImageIO.getImageReadersBySuffix("png").next();
-                    ImageInputStream imageInputStream = ImageIO.createImageInputStream(new FileInputStream(file));
-                    imageReader.setInput(imageInputStream, false);
-                    for (int y = 0; y < Math.pow(2, z); y++) {
-                        Rectangle rowRect = new Rectangle(0, y * tileWidth, imageReader.getWidth(0), tileWidth);
-                        ImageReadParam paramRow = imageReader.getDefaultReadParam();
-                        paramRow.setSourceRegion(rowRect);
-                        BufferedImage xRow = imageReader.read(0, paramRow);
-                        for (int x = 0; x < Math.pow(2, z); x++) {
-                            BufferedImage img = xRow.getSubimage(x * tileWidth, 0, tileWidth, tileWidth);
-                            if (!allWhite(img)) {
-//                                File destFile = new File(destPath + "\\" + baseDestString + (f + 1) + "\\" + z + "\\" + x + "\\" + y + ".png");
-                                File destFile = new File(destPath + "\\" + String.format(baseDestString, f, z, x, y));
-                                destFile.getParentFile().mkdirs();
-                                ImageIO.write(img, "png", destFile);
-
-                                //append correct file to allow for return of populated files
-                                res.append(String.format("(%d,%d,%d,%d);", f, z, x, y));
-                            }
-                        }
-                        System.out.print(String.format("\r Splitting floor %d: at line %d/%d", f,  (y + 1), (int)Math.pow(2, z)));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                    File file = new File(String.format(srcPath + "\\" + baseSrcString, f, z));
+//                    ImageReader imageReader = ImageIO.getImageReadersBySuffix("png").next();
+//                    ImageInputStream imageInputStream = ImageIO.createImageInputStream(new FileInputStream(file));
+//                    imageReader.setInput(imageInputStream, false);
+//                    for (int y = 0; y < Math.pow(2, z); y++) {
+//                        Rectangle rowRect = new Rectangle(0, y * tileWidth, imageReader.getWidth(0), tileWidth);
+//                        ImageReadParam paramRow = imageReader.getDefaultReadParam();
+//                        paramRow.setSourceRegion(rowRect);
+//                        BufferedImage xRow = imageReader.read(0, paramRow);
+//                        for (int x = 0; x < Math.pow(2, z); x++) {
+//                            BufferedImage img = xRow.getSubimage(x * tileWidth, 0, tileWidth, tileWidth);
+//                            if (!allWhite(img)) {
+//                                File destFile = new File(destPath + "\\" + String.format(baseDestString, f, z, x, y));
+//                                destFile.getParentFile().mkdirs();
+//                                ImageIO.write(img, "png", destFile);
+//
+//                                //append correct file to allow for return of populated files
+//                                res.append(String.format("(%d,%d,%d,%d);", f, z, x, y));
+//                            }
+//                        }
+//                        System.out.print(String.format("\r Splitting floor %d: at line %d/%d", f,  (y + 1), (int)Math.pow(2, z)));
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+                tileImage(String.format(srcPath + "\\" + baseSrcString, f, z),
+                        (destPath + "\\" + String.format(baseDestString, f, z)),
+                        z, tileWidth);
             }
         }
         System.out.print("\n");
         return res.toString();
+    }
+
+    /**
+     * Converts an image stored on disk to a set of tiles also stored on disk
+     *
+     * @param src path to source file
+     * @param destFormat the format of the destination
+     * @param zoom
+     * @param tileWidth
+     */
+    private static void tileImage(String src, String destFormat, int zoom, int tileWidth){
+        try{
+            File file = new File(src);
+            ImageReader imageReader = ImageIO.getImageReadersBySuffix("png").next();
+            ImageInputStream imageInputStream = ImageIO.createImageInputStream(new FileInputStream(file));
+            imageReader.setInput(imageInputStream);
+            for(int y = 0; y < Math.pow(2, zoom); y++){
+                Rectangle rowRect = new Rectangle(0, y * tileWidth, imageReader.getWidth(0), tileWidth);
+                ImageReadParam paramRow = imageReader.getDefaultReadParam();
+                paramRow.setSourceRegion(rowRect);
+                BufferedImage xRow = imageReader.read(0, paramRow);
+                for(int x = 0; x < Math.pow(2, zoom); x++){
+                    BufferedImage img = xRow.getSubimage(x * tileWidth, 0, tileWidth, tileWidth);
+                    if(!allWhite(img)) {
+
+                        File destFile = new File(String.format(destFormat, x, y));
+                        destFile.getParentFile().mkdirs();
+                        ImageIO.write(img, "png", destFile);
+                    }
+                    System.out.print(String.format("\r(x = %d, y = %d)", x, y));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
