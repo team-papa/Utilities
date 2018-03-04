@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.regex.Pattern;
 
 public class utils {
 
@@ -33,41 +34,51 @@ public class utils {
 
 //        genBlankTile("TileMapsNewFoldered", 256, Color.WHITE);
 
-        tileImage("Map1_7.png", "TileMap1\\7\\%d\\%d.png", 7, 256);
+//        tileImage("Map1_7.png", "TileMap1\\7\\%d\\%d.png", 7, 256);
+//
+//        try {
+//            String format = "TileMap%d\\%d\\%d\\%d.png";
+//            for(int zoom = 6; zoom >= 0; zoom --) {
+//                for (int f = 1; f <= 1; f++) {
+//                    for (int x = 0; x < Math.pow(2, zoom); x++) {
+//                        for (int y = 0; y < Math.pow(2, zoom); y++) {
+//                            int ax = x * 2, ay = y * 2;
+//                            int bx = x * 2 + 1, by = y * 2;
+//                            int cx = x * 2, cy = y * 2 + 1;
+//                            int dx = x * 2 + 1, dy = y * 2 + 1;
+//
+//                            BufferedImage A = loadImageFromFile(blankOrFile(format, f, zoom + 1, ax, ay));
+//                            BufferedImage B = loadImageFromFile(blankOrFile(format, f, zoom + 1, bx, by));
+//                            BufferedImage C = loadImageFromFile(blankOrFile(format, f, zoom + 1, cx, cy));
+//                            BufferedImage D = loadImageFromFile(blankOrFile(format, f, zoom + 1, dx, dy));
+//
+//                            BufferedImage result = combineImageImage(A, B, C, D);
+//
+//                            File resultFile = new File(String.format(format, f, zoom, x, y));
+//                            resultFile.getParentFile().mkdirs();
+//
+//                            if (!allWhite(result))
+//                                ImageIO.write(result, "png", new File(String.format(format, f, zoom, x, y)));
+//                            System.out.print(String.format("\rz=%d/%d, f=%d/%d, x=%d/%d, y=%d/%d", 7-zoom, 7, f, 3, x, (int)Math.pow(2, zoom), y, (int)Math.pow(2, zoom)));
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.print("\n");
 
+        int[] floors = {1,2,3};
+        int[] zoomLevels = {0,1,2,3,4,5,6,7};
+        String populatedTiles = getListPopulatedTiles("Maps", "TileMap%d\\%d\\%d\\%d.png", floors, zoomLevels);
         try {
-            String format = "TileMap%d\\%d\\%d\\%d.png";
-            for(int zoom = 6; zoom >= 0; zoom --) {
-                for (int f = 1; f <= 1; f++) {
-                    for (int x = 0; x < Math.pow(2, zoom); x++) {
-                        for (int y = 0; y < Math.pow(2, zoom); y++) {
-                            int ax = x * 2, ay = y * 2;
-                            int bx = x * 2 + 1, by = y * 2;
-                            int cx = x * 2, cy = y * 2 + 1;
-                            int dx = x * 2 + 1, dy = y * 2 + 1;
-
-                            BufferedImage A = loadImageFromFile(blankOrFile(format, f, zoom + 1, ax, ay));
-                            BufferedImage B = loadImageFromFile(blankOrFile(format, f, zoom + 1, bx, by));
-                            BufferedImage C = loadImageFromFile(blankOrFile(format, f, zoom + 1, cx, cy));
-                            BufferedImage D = loadImageFromFile(blankOrFile(format, f, zoom + 1, dx, dy));
-
-                            BufferedImage result = combineImageImage(A, B, C, D);
-
-                            File resultFile = new File(String.format(format, f, zoom, x, y));
-                            resultFile.getParentFile().mkdirs();
-
-                            if (!allWhite(result))
-                                ImageIO.write(result, "png", new File(String.format(format, f, zoom, x, y)));
-                            System.out.print(String.format("\rz=%d/%d, f=%d/%d, x=%d/%d, y=%d/%d", 7-zoom, 7, f, 3, x, (int)Math.pow(2, zoom), y, (int)Math.pow(2, zoom)));
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
+            PrintWriter writer = new PrintWriter("populatedTiles.txt");
+            writer.print(populatedTiles);
+            writer.close();
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.print("\n");
-
     }
 
     private static File blankOrFile(String format, int f, int zoom, int x, int y){
@@ -237,5 +248,40 @@ public class utils {
         gfx.drawImage(D, scaleOp, A.getWidth() / 2, A.getHeight() / 2);
         gfx.dispose();
         return result;
+    }
+
+    /**
+     *
+     * @param topLevelPath the top level
+     * @param format the format of the tile files. Parameters given in floor, zoom, x, y order
+     * @return
+     */
+    public static String getListPopulatedTiles(String topLevelPath, String format, int[] floors, int[] zoomLevels){
+
+//        Pattern p = Pattern.compile("TileMap[0-9]*\\\\[0-9]*\\\\[0-9]*\\\\[0-9]*.png");
+//
+//        File dir = new File(topLevelPath);
+//        File[] files = dir.listFiles((d,name)->(p.matcher(dir.getAbsolutePath()).matches()));
+//
+//        for(File f : files){
+//
+//        }
+
+        StringBuilder res = new StringBuilder();
+        for(int f : floors){
+            for(int z : zoomLevels){
+                for(int x = 0; x < Math.pow(2, z); x++){
+                    for(int y = 0; y < Math.pow(2, z); y++){
+                        File file = new File(topLevelPath + "\\" + String.format(format, f, z, x, y));
+
+                        if(file.exists()){
+                            res.append(String.format("(%d,%d,%d,%d);", f, z, x, y));
+                        }
+                    }
+                }
+            }
+        }
+
+        return res.toString();
     }
 }
